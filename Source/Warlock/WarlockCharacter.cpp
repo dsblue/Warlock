@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Items/Item.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AWarlockCharacter
@@ -45,6 +46,22 @@ AWarlockCharacter::AWarlockCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
+
+	// Set Default Status
+	Health = 100.f;
+
+	// Initialize component to manage inventory
+	Inventory = CreateDefaultSubobject<UInventoryComponent>("Inventory");
+	Inventory->Capacity = 20;
+}
+
+void AWarlockCharacter::UseItem(UItem* Item)
+{
+	if (Item)
+	{
+		Item->Use(this);
+		Item->OnUse(this);
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////

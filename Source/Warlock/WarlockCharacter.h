@@ -29,6 +29,21 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	float Health = 0.0f;
+
+	UFUNCTION(BlueprintPure)
+	float GetHealth() const { return Health; }
+
+	UFUNCTION(BlueprintCallable)
+	void SetHealth(float h) { Health = h; }
+
+	UFUNCTION(BlueprintCallable)
+	void UseItem(class UItem* Item);
+
+protected:
+	class UInventoryComponent* Inventory; 
+
 protected:
 
 	/** Resets HMD orientation in VR. */
