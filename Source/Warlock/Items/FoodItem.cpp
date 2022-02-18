@@ -7,4 +7,9 @@
 void UFoodItem::Use(AWarlockCharacter* Character)
 {
 	Character->Health += HealAmount;
+
+	if (OwningInventory)
+	{
+		OwningInventory->RemoveItem(this);
+	}
 }

@@ -18,6 +18,9 @@ bool UInventoryComponent::RemoveItem(UItem* Item)
 		Item->OwningInventory = nullptr;
 		Item->World = nullptr;
 		Items.RemoveSingle(Item);
+
+		OnInventoryUpdated.Broadcast();
+
 		return true;
 	}
 

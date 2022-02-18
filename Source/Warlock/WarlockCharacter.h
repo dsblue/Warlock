@@ -33,7 +33,7 @@ public:
 	float Health = 0.0f;
 
 	UFUNCTION(BlueprintPure)
-	float GetHealth() const { return Health; }
+	float GetHealth() const { return Health; } 
 
 	UFUNCTION(BlueprintCallable)
 	void SetHealth(float h) { Health = h; }
@@ -42,6 +42,8 @@ public:
 	void UseItem(class UItem* Item);
 
 protected:
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
 	class UInventoryComponent* Inventory; 
 
 protected:

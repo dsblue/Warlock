@@ -1,3 +1,4 @@
+
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "WarlockCharacter.h"
@@ -52,7 +53,7 @@ AWarlockCharacter::AWarlockCharacter()
 
 	// Initialize component to manage inventory
 	Inventory = CreateDefaultSubobject<UInventoryComponent>("Inventory");
-	Inventory->Capacity = 20;
+	Inventory->Capacity = 20; 
 }
 
 void AWarlockCharacter::UseItem(UItem* Item)

@@ -16,7 +16,7 @@ class WARLOCK_API UFoodItem : public UItem
 
 public:
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	float HealAmount = 10;
 
 	void Use(class AWarlockCharacter* Character);
