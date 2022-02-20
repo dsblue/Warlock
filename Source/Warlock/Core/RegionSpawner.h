@@ -6,30 +6,13 @@
 #include "GameFramework/Actor.h"
 #include "RegionSpawner.generated.h"
 
-UCLASS(Blueprintable, BlueprintType)
-class WARLOCK_API ACube : public AActor
+UENUM(BlueprintType)
+enum class ESpawnRules : uint8
 {
-	GENERATED_BODY()
-
-public:
-	ACube() 
-	{
-		// Create a static mesh component
-		UStaticMeshComponent* cubeMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Cube"));
-
-		// Load the Cube mesh
-		UStaticMesh* cubeMesh = ConstructorHelpers::FObjectFinder<UStaticMesh>(TEXT("StaticMesh'/Engine/BasicShapes/Cube.Cube'")).Object;
-
-		// Set the component's mesh
-		cubeMeshComponent->SetStaticMesh(cubeMesh);
-
-		// Set as root component
-		RootComponent = cubeMeshComponent;
-	};
-
+	Random,
+	RandomAlignVertical,
+	RandomAlighHorizontal,
 };
-
-
 
 UCLASS()
 class WARLOCK_API ARegionSpawner : public AActor
@@ -53,8 +36,20 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Region Spawer", meta = (ClampMin = 0.0f))
 	int32 Quantity = 0;
 
+	UPROPERTY(EditAnywhere, Category = "Region Spawer", meta = (ClampMin = 0.0f))
+	float UpdateRateInSeconds = 0;
+
+	UPROPERTY(EditAnywhere, Category = "Region Spawer")
+	bool bUpdateAllAtOnce = true;
+
+	UPROPERTY(EditAnywhere, Category = "Region Spawer")
+	bool bRespawnWhenNeeded = true;
+
 	UFUNCTION()
 	void OnSpawnedActorDestroyed(AActor* DestroyedActor);
+
+	UPROPERTY(EditAnywhere, Category = "Region Spawer")
+	ESpawnRules HowToSpawn = ESpawnRules::Random;
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -62,12 +57,14 @@ protected:
 private:
 	TArray<class AActor*> Spawned;
 
-	int NumSpawned = 0;
+	FTimerHandle MemberTimerHandle;
+
+	void InternalUpdate();
+
+	int CurrSpawned = 0;
+
+	int TotalSpawned = 0;
 
 	void Spawn();
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
 };

@@ -4,13 +4,14 @@
 #include "RegionSpawner.h"
 #include "Components/BoxComponent.h"
 #include "Engine/World.h"
-#include <Kismet/KismetMathLibrary.h>
+#include "TimerManager.h"
+#include "Math/UnrealMathUtility.h"
 
 // Sets default values
 ARegionSpawner::ARegionSpawner()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
@@ -22,23 +23,69 @@ ARegionSpawner::ARegionSpawner()
 void ARegionSpawner::BeginPlay()
 {
 	Super::BeginPlay();
+
+	verify(Quantity >= 0);
+
+	InternalUpdate();
+
+	if (UpdateRateInSeconds)
+	{
+		GetWorldTimerManager().SetTimer(MemberTimerHandle, this, &ARegionSpawner::InternalUpdate, UpdateRateInSeconds, true);
+	}
 }
 
 void ARegionSpawner::Spawn()
 {
 	if (ActorToSpawn)
 	{
-		const FVector Position = UKismetMathLibrary::RandomPointInBoundingBox(Region->GetComponentLocation(), Region->GetScaledBoxExtent());
-		const FRotator Rotation = GetActorRotation();
+		FVector Location = GetActorLocation();
+		FRotator Rotation = GetActorRotation();
 
-		AActor* Actor = GetWorld()->SpawnActor<AActor>(ActorToSpawn, FTransform(Rotation, Position));
+		FVector RandPosition = FMath::RandPointInBox(
+			FBox::BuildAABB(Region->GetComponentLocation(), Region->GetScaledBoxExtent())
+		);
+
+		switch (HowToSpawn)
+		{
+			case ESpawnRules::Random:
+				Location = RandPosition;
+				break;
+			case ESpawnRules::RandomAlighHorizontal:
+				Location = RandPosition;
+				Location.Z = GetActorLocation().Z;
+				break;
+			case ESpawnRules::RandomAlignVertical:
+				Location = RandPosition;
+				Location.X = GetActorLocation().X;
+				break;
+			default:
+				checkNoEntry()
+				break;
+		}
+		
+		AActor* Actor = GetWorld()->SpawnActor<AActor>(ActorToSpawn, FTransform(Rotation, Location));
 
 		if (Actor != nullptr)
 		{
 			Actor->OnDestroyed.AddDynamic(this, &ARegionSpawner::OnSpawnedActorDestroyed);
 			Spawned.Add(Actor);
-			NumSpawned++;
+			CurrSpawned++;
+			TotalSpawned++;
 		}
+	}
+}
+
+void ARegionSpawner::InternalUpdate()
+{
+	do
+	{
+		Spawn();
+	}
+	while ((CurrSpawned < Quantity) && bUpdateAllAtOnce);
+
+	if (!bRespawnWhenNeeded && (Quantity <= TotalSpawned))
+	{
+		GetWorldTimerManager().ClearTimer(MemberTimerHandle);
 	}
 }
 
@@ -46,20 +93,9 @@ void ARegionSpawner::OnSpawnedActorDestroyed(AActor* DestroyedActor)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Spawner: %s Destoyed: %s"), *this->GetName(), *DestroyedActor->GetName())
 
-	if (NumSpawned > 0)
-		NumSpawned--;
+	if (CurrSpawned > 0)
+		CurrSpawned--;
 
 	Spawned.Remove(DestroyedActor);
-}
-
-// Called every frame
-void ARegionSpawner::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	if (NumSpawned < Quantity)
-	{
-		Spawn();
-	}
 }
 
